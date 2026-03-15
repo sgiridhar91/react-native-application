@@ -3,46 +3,11 @@ trigger: none
 pool:
   name: Default
   demands:
-    - agent.os -equals Linux
+    - agent.name -equals linux-agent
 
 stages:
-  - stage: Install
-    displayName: 'Install Dependencies'
-    jobs:
-      - job: Install
-        steps:
-          - task: NodeTool@0
-            inputs:
-              versionSpec: '22.x'
-            displayName: 'Install Node.js'
-
-          - script: |
-              npm install -g yarn
-              yarn --version
-            displayName: 'Install Yarn'
-
-          - script: |
-              yarn install --ignore-engines
-            displayName: 'Yarn Install Root'
-
-          - script: |
-              cd package
-              yarn install --ignore-engines
-            displayName: 'Yarn Install Package'
-
-          - script: |
-              cd package/native-package
-              yarn install --ignore-engines
-            displayName: 'Yarn Install Native Package'
-
-          - script: |
-              cd examples/SampleApp
-              yarn install --ignore-engines
-            displayName: 'Yarn Install SampleApp'
-
   - stage: Build
     displayName: 'Build Android APK'
-    dependsOn: Install
     jobs:
       - job: Build
         steps:
