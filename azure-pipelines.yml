@@ -81,7 +81,16 @@ stages:
               export PATH=$PATH:$ANDROID_HOME/platform-tools
               export PATH=$PATH:$ANDROID_HOME/build-tools/33.0.0
               cd examples/SampleApp/android
-              ./gradlew assembleDebug
+              ./gradlew --version
+            displayName: 'Download Gradle'
+
+          - script: |
+              export ANDROID_HOME=$HOME/android-sdk
+              export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin
+              export PATH=$PATH:$ANDROID_HOME/platform-tools
+              export PATH=$PATH:$ANDROID_HOME/build-tools/33.0.0
+              cd examples/SampleApp/android
+              ./gradlew assembleDebug --no-daemon --stacktrace
             displayName: 'Build Debug APK'
 
           - task: PublishBuildArtifacts@1
