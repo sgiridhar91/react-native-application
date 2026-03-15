@@ -1,0 +1,47 @@
+trigger:
+  - main
+
+pool:
+  name: Default
+  demands:
+    - agent.os -equals Linux
+
+stages:
+  - stage: Install
+    displayName: 'Install Dependencies'
+    jobs:
+      - job: Install
+        steps:
+          - task: NodeTool@0
+            inputs:
+              versionSpec: '22.x'
+            displayName: 'Install Node.js'
+
+          - script: |
+              npm install -g yarn
+              yarn --version
+            displayName: 'Install Yarn'
+
+          - script: |
+              cd examples/SampleApp
+              yarn install
+            displayName: 'Yarn Install'
+
+  - stage: Build
+    displayName: 'Build Android APK'
+    dependsOn: Install
+    jobs:
+      - job: Build
+        steps:
+          - script: |
+              cd examples/SampleApp/android
+              ./gradlew assembleDebug
+            displayName: 'Build Debug APK'
+            env:
+              ANDROID_HOME: $(HOME)/android-sdk
+
+          - task: PublishBuildArtifacts@1
+            inputs:
+              pathToPublish: 'examples/SampleApp/android/app/build/outputs/apk/debug'
+              artifactName: 'android-apk'
+            displayName: 'Publish APK Artifact'
