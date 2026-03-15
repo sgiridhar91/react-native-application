@@ -1,6 +1,5 @@
 trigger: none
 
-
 pool:
   name: Default
   demands:
@@ -21,13 +20,14 @@ stages:
               npm install -g yarn
               yarn --version
             displayName: 'Install Yarn'
+
           - script: |
-              yarn install
+              yarn install --ignore-engines
             displayName: 'Yarn Install Root'
 
           - script: |
               cd examples/SampleApp
-              yarn install
+              yarn install --ignore-engines
             displayName: 'Yarn Install SampleApp'
 
   - stage: Build
@@ -37,11 +37,21 @@ stages:
       - job: Build
         steps:
           - script: |
+              yarn install --ignore-engines
+            displayName: 'Yarn Install Root'
+
+          - script: |
+              cd examples/SampleApp
+              yarn install --ignore-engines
+            displayName: 'Yarn Install SampleApp'
+
+          - script: |
+              export ANDROID_HOME=$HOME/android-sdk
+              export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin
+              export PATH=$PATH:$ANDROID_HOME/platform-tools
               cd examples/SampleApp/android
               ./gradlew assembleDebug
             displayName: 'Build Debug APK'
-            env:
-              ANDROID_HOME: $(HOME)/android-sdk
 
           - task: PublishBuildArtifacts@1
             inputs:
