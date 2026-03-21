@@ -1,0 +1,98 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pool:
+  name: Default
+  demands:
+    - agent.name -equals linux-agent
+
+variables:
+  ANDROID_HOME: /home/azureuser/android-sdk
+  PATH_ANDROID: /home/azureuser/android-sdk/cmdline-tools/latest/bin:/home/azureuser/android-sdk/platform-tools:/home/azureuser/android-sdk/build-tools/33.0.0
+
+stages:
+
+  # ── STAGE 1: INSTALL DEPENDENCIES ──
+  - stage: Install
+    displayName: 'Install Dependencies'
+    jobs:
+      - job: Install
+        timeoutInMinutes: 120
+        steps:
+          - script: |
+              yarn install --ignore-engines
+            displayName: 'Yarn Install Root'
+
+          - script: |
+              yarn bootstrap
+            displayName: 'Lerna Bootstrap All Packages'
+
+  # ── STAGE 2: CODE QUALITY ──
+  - stage: CodeQuality
+    displayName: 'Code Quality'
+    dependsOn: Install
+    jobs:
+      - job: CodeQuality
+        timeoutInMinutes: 120
+        steps:
+          - script: |
+              yarn install --ignore-engines
+            displayName: 'Yarn Install Root'
+
+          - script: |
+              yarn bootstrap
+            displayName: 'Lerna Bootstrap'
+
+          - script: |
+              yarn eslint
+            displayName: 'ESLint Code Quality Check'
+            continueOnError: true
+
+          - task: SonarQubePrepare@7
+            inputs:
+              SonarQube: 'sonarqube'
+              scannerMode: 'CLI'
+              configMode: 'manual'
+              cliProjectKey: 'react-native-application'
+              cliProjectName: 'react-native-application'
+              cliSources: '.'
+            displayName: 'SonarQube Prepare'
+
+          - task: SonarQubeAnalyze@7
+            displayName: 'SonarQube Analyze'
+
+          - task: SonarQubePublish@7
+            inputs:
+              pollingTimeoutSec: '300'
+            displayName: 'SonarQube Publish Results'
+
+  # ── STAGE 3: BUILD ──
+  - stage: Build
+    displayName: 'Build Android APK'
+    dependsOn: CodeQuality
+    jobs:
+      - job: Build
+        timeoutInMinutes: 120
+        steps:
+          - script: |
+              yarn install --ignore-engines
+            displayName: 'Yarn Install Root'
+
+          - script: |
+              yarn bootstrap
+            displayName: 'Lerna Bootstrap'
+
+          - script: |
+              export ANDROID_HOME=$(ANDROID_HOME)
+              export PATH=$PATH:$(PATH_ANDROID)
+              cd examples/SampleApp/android
+              ./gradlew assembleDebug --no-daemon --stacktrace
+            displayName: 'Build Debug APK'
+
+          - task: PublishBuildArtifacts@1
+            inputs:
+              pathToPublish: 'examples/SampleApp/android/app/build/outputs/apk/debug'
+              artifactName: 'android-apk'
+            displayName: 'Publish APK Artifact'
