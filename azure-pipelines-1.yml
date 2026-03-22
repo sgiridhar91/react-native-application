@@ -71,26 +71,18 @@ stages:
             displayName: 'ESLint Code Quality Check'
             continueOnError: true
 
-          - task: SonarQubePrepare@7
-            inputs:
-              SonarQube: 'sonarqube'
-              scannerMode: 'CLI'
-              configMode: 'manual'
-              cliProjectKey: 'react-native-application'
-              cliProjectName: 'react-native-application'
-              cliSources: '.'
-              extraProperties: |
-                sonar.branch.name=
-            displayName: 'SonarQube Prepare'
-
-
-          - task: SonarQubeAnalyze@7
-            displayName: 'SonarQube Analyze'
-
-          - task: SonarQubePublish@7
-            inputs:
-              pollingTimeoutSec: '300'
-            displayName: 'SonarQube Publish Results'
+          - script: |
+              export PATH=$PATH:$HOME/.sonar/cache/sonar-scanner-7.2.0.5079-linux-x64/bin
+              sonar-scanner \
+                -Dsonar.projectKey=react-native-application \
+                -Dsonar.projectName=react-native-application \
+                -Dsonar.sources=. \
+                -Dsonar.exclusions="**/node_modules/**,**/android/**,**/ios/**,**/build/**" \
+                -Dsonar.host.url=http://20.213.25.16:9000 \
+                -Dsonar.login=$(SONAR_TOKEN)
+            displayName: 'SonarQube Scan'
+            env:
+              SONAR_TOKEN: $(SONAR_TOKEN)
 
   # ── STAGE 3: BUILD ──
   - stage: Build
