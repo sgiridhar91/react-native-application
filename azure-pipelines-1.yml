@@ -13,36 +13,9 @@ variables:
 
 stages:
 
-  # ── STAGE 1: INSTALL DEPENDENCIES ──
-  - stage: Install
-    displayName: 'Install Dependencies'
-    jobs:
-      - job: Install
-        timeoutInMinutes: 120
-        steps:
-          - script: |
-              yarn install --ignore-engines
-            displayName: 'Yarn Install Root'
-
-          - script: |
-              cd package
-              yarn install --ignore-engines
-            displayName: 'Yarn Install Package'
-
-          - script: |
-              cd package/native-package
-              yarn install --ignore-engines
-            displayName: 'Yarn Install Native Package'
-
-          - script: |
-              cd examples/SampleApp
-              yarn install --ignore-engines
-            displayName: 'Yarn Install SampleApp'
-
-  # ── STAGE 2: CODE QUALITY ──
+  # ── STAGE 1: INSTALL & CODE QUALITY ──
   - stage: CodeQuality
-    displayName: 'Code Quality'
-    dependsOn: Install
+    displayName: 'Install & Code Quality'
     jobs:
       - job: CodeQuality
         timeoutInMinutes: 120
@@ -72,8 +45,7 @@ stages:
             continueOnError: true
 
           - script: |
-              export PATH=$PATH:$HOME/.sonar/cache/sonar-scanner-7.2.0.5079-linux-x64/bin
-              sonar-scanner \
+              /home/azureuser/myagent/_work/_tasks/SonarQubeAnalyze_6d01813a-9589-4b15-8491-8164aeb38055/7.4.2/sonar-scanner/bin/sonar-scanner \
                 -Dsonar.projectKey=react-native-application \
                 -Dsonar.projectName=react-native-application \
                 -Dsonar.sources=. \
@@ -84,7 +56,7 @@ stages:
             env:
               SONAR_TOKEN: $(SONAR_TOKEN)
 
-  # ── STAGE 3: BUILD ──
+  # ── STAGE 2: BUILD ──
   - stage: Build
     displayName: 'Build Android APK'
     dependsOn: CodeQuality
@@ -125,3 +97,5 @@ stages:
               pathToPublish: 'examples/SampleApp/android/app/build/outputs/apk/debug'
               artifactName: 'android-apk'
             displayName: 'Publish APK Artifact'
+
+
