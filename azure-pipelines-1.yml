@@ -79,7 +79,10 @@ stages:
               cliProjectKey: 'react-native-application'
               cliProjectName: 'react-native-application'
               cliSources: '.'
+              extraProperties: |
+                sonar.branch.name=
             displayName: 'SonarQube Prepare'
+
 
           - task: SonarQubeAnalyze@7
             displayName: 'SonarQube Analyze'
