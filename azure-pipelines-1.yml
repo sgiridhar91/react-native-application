@@ -10,7 +10,6 @@ pool:
 
 variables:
   ANDROID_HOME: /home/azureuser/android-sdk
-  PATH_ANDROID: /home/azureuser/android-sdk/cmdline-tools/latest/bin:/home/azureuser/android-sdk/platform-tools:/home/azureuser/android-sdk/build-tools/33.0.0
 
 stages:
 
@@ -26,8 +25,19 @@ stages:
             displayName: 'Yarn Install Root'
 
           - script: |
-              yarn bootstrap
-            displayName: 'Lerna Bootstrap All Packages'
+              cd package
+              yarn install --ignore-engines
+            displayName: 'Yarn Install Package'
+
+          - script: |
+              cd package/native-package
+              yarn install --ignore-engines
+            displayName: 'Yarn Install Native Package'
+
+          - script: |
+              cd examples/SampleApp
+              yarn install --ignore-engines
+            displayName: 'Yarn Install SampleApp'
 
   # ── STAGE 2: CODE QUALITY ──
   - stage: CodeQuality
@@ -42,8 +52,19 @@ stages:
             displayName: 'Yarn Install Root'
 
           - script: |
-              yarn bootstrap
-            displayName: 'Lerna Bootstrap'
+              cd package
+              yarn install --ignore-engines
+            displayName: 'Yarn Install Package'
+
+          - script: |
+              cd package/native-package
+              yarn install --ignore-engines
+            displayName: 'Yarn Install Native Package'
+
+          - script: |
+              cd examples/SampleApp
+              yarn install --ignore-engines
+            displayName: 'Yarn Install SampleApp'
 
           - script: |
               yarn eslint
@@ -81,12 +102,25 @@ stages:
             displayName: 'Yarn Install Root'
 
           - script: |
-              yarn bootstrap
-            displayName: 'Lerna Bootstrap'
+              cd package
+              yarn install --ignore-engines
+            displayName: 'Yarn Install Package'
+
+          - script: |
+              cd package/native-package
+              yarn install --ignore-engines
+            displayName: 'Yarn Install Native Package'
+
+          - script: |
+              cd examples/SampleApp
+              yarn install --ignore-engines
+            displayName: 'Yarn Install SampleApp'
 
           - script: |
               export ANDROID_HOME=$(ANDROID_HOME)
-              export PATH=$PATH:$(PATH_ANDROID)
+              export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin
+              export PATH=$PATH:$ANDROID_HOME/platform-tools
+              export PATH=$PATH:$ANDROID_HOME/build-tools/33.0.0
               cd examples/SampleApp/android
               ./gradlew assembleDebug --no-daemon --stacktrace
             displayName: 'Build Debug APK'
